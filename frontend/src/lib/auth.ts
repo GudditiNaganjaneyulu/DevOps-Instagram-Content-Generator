@@ -9,17 +9,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          // Request offline access so we get an access_token we can send to backend
           access_type: "offline",
           prompt: "consent",
           scope: "openid email profile",
         },
       },
     }),
-    GitHub({
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
-    }),
+    ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET
+      ? [GitHub({ clientId: process.env.GITHUB_ID, clientSecret: process.env.GITHUB_SECRET })]
+      : []),
   ],
   session: { strategy: "jwt" },
   callbacks: {
