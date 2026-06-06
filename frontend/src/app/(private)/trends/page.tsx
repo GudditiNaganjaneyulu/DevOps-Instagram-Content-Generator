@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { fetchTrends, generateTrendMeme } from "@/lib/api";
-import { TrendingUp, ExternalLink, Wand2, Loader2, Reddit } from "lucide-react";
+import { TrendingUp, ExternalLink, Wand2, Loader2 } from "lucide-react";
 import type { Trend } from "@/types";
 import { formatRelativeTime } from "@/lib/utils";
 
