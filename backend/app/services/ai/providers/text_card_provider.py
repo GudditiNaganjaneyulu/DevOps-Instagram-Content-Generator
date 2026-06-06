@@ -1,12 +1,13 @@
 """
-Renders @runtimeemotions-style text cards:
+Renders @runtimeemotions / Runtime.xFeelings style text cards.
 - Black background, monospace font
-- ALL_CAPS words syntax-highlighted in rotating colors
+- ALL_CAPS words syntax-highlighted
+- Each line individually centered
+- Blank lines between stanzas create breathing room
 - </> divider + @handle footer
 """
 import io
 import re
-import textwrap
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from app.core.exceptions import ProviderError
@@ -15,33 +16,31 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 SIZE = 1080
-PAD = 90
+PAD = 80
 BG = (8, 8, 8)
-TEXT_COLOR = (200, 200, 200)
-DIM_COLOR = (100, 100, 100)
+TEXT_COLOR = (210, 210, 210)
+DIM_COLOR = (90, 90, 90)
+SEP_COLOR = (50, 50, 50)
 HANDLE = "@devopsemotions"
 TAGLINE = "// Follow for more"
 
-# Syntax-highlight palette (matches @runtimeemotions color scheme)
 HIGHLIGHT_COLORS = [
     (224, 108, 117),  # red
     (152, 195, 121),  # green
     (97,  175, 239),  # blue
     (198, 120, 221),  # purple
     (86,  182, 194),  # cyan
-    (229, 192, 123),  # orange/yellow
+    (229, 192, 123),  # orange
 ]
 
-# Font search paths (Render = Ubuntu; local Mac)
-_FONT_PATHS = [
+_BOLD_PATHS = [
     "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf",
     "/usr/share/fonts/truetype/ubuntu/UbuntuMono-B.ttf",
     "/System/Library/Fonts/Supplemental/Courier New Bold.ttf",
     "/Library/Fonts/Courier New Bold.ttf",
 ]
-
-_FONT_PATHS_REGULAR = [
+_REGULAR_PATHS = [
     "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf",
     "/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf",
@@ -50,9 +49,8 @@ _FONT_PATHS_REGULAR = [
 ]
 
 
-def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    paths = _FONT_PATHS if bold else _FONT_PATHS_REGULAR
-    for path in paths:
+def _load_font(size: int, bold: bool = True):
+    for path in (_BOLD_PATHS if bold else _REGULAR_PATHS):
         if Path(path).exists():
             try:
                 return ImageFont.truetype(path, size)
@@ -61,118 +59,139 @@ def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageF
     return ImageFont.load_default()
 
 
-# Pre-assign a color to each distinct ALL_CAPS word seen so far
-_color_cache: dict[str, tuple] = {}
-_color_idx = 0
-
-
-def _get_color(word: str) -> tuple:
-    global _color_idx
-    if word not in _color_cache:
-        _color_cache[word] = HIGHLIGHT_COLORS[_color_idx % len(HIGHLIGHT_COLORS)]
-        _color_idx += 1
-    return _color_cache[word]
-
-
 def _is_highlight(word: str) -> bool:
-    clean = re.sub(r"[^A-Za-z0-9_]", "", word)
-    return len(clean) >= 2 and clean == clean.upper() and not clean.isdigit()
+    core = re.sub(r"[^A-Za-z0-9]", "", word)
+    return len(core) >= 2 and core == core.upper() and not core.isdigit()
 
 
-def _wrap_text(text: str, max_chars: int = 32) -> list[str]:
-    lines = []
-    for paragraph in text.split("\n"):
-        if not paragraph.strip():
-            lines.append("")
-            continue
-        wrapped = textwrap.wrap(paragraph, width=max_chars) or [""]
-        lines.extend(wrapped)
-    return lines
+def _word_color(word: str, color_map: dict) -> tuple:
+    key = re.sub(r"[^A-Z0-9]", "", word.upper())
+    if key not in color_map:
+        color_map[key] = HIGHLIGHT_COLORS[len(color_map) % len(HIGHLIGHT_COLORS)]
+    return color_map[key]
 
 
-def _draw_line(draw: ImageDraw.ImageDraw, line: str, x: int, y: int,
-               font: ImageFont.FreeTypeFont, char_w: int) -> None:
-    """Draw one line with per-word coloring."""
-    tokens = re.split(r"(\s+)", line)
-    cx = x
-    for token in tokens:
+def _text_width(font, text: str) -> int:
+    bbox = font.getbbox(text)
+    return bbox[2] - bbox[0]
+
+
+def _draw_line_centered(draw, line: str, y: int, font, color_map: dict) -> None:
+    total_w = _text_width(font, line)
+    x = (SIZE - total_w) // 2
+    for token in re.split(r"(\s+)", line):
         if not token:
             continue
         if token.strip() == "":
-            cx += int(len(token) * char_w)
+            x += _text_width(font, token)
             continue
-        color = _get_color(token) if _is_highlight(token) else TEXT_COLOR
-        draw.text((cx, y), token, font=font, fill=color)
-        bbox = font.getbbox(token)
-        cx += bbox[2] - bbox[0]
+        color = _word_color(token, color_map) if _is_highlight(token) else TEXT_COLOR
+        draw.text((x, y), token, font=font, fill=color)
+        x += _text_width(font, token)
+
+
+# Speaker line pattern: "Name:" or "Name :" at start
+_SPEAKER_RE = re.compile(r"^[A-Za-z][A-Za-z ]{1,24}:\s*")
+
+
+def _parse_lines(prompt: str) -> list:
+    """
+    Returns list of (text, is_blank, is_speaker_start).
+    Blank lines (\n\n or empty) create stanza breaks.
+    Lines starting with "Name:" get extra top spacing.
+    """
+    raw = re.split(r"\\n|\n", prompt.strip())
+    result = []
+    prev_was_speaker = False
+    for raw_line in raw:
+        stripped = raw_line.strip()
+        if not stripped:
+            result.append(("", True, False))
+            prev_was_speaker = False
+            continue
+        is_speaker = bool(_SPEAKER_RE.match(stripped))
+        # Insert blank gap before a new speaker (if previous wasn't already blank)
+        if is_speaker and result and not result[-1][1] and not prev_was_speaker:
+            result.append(("", True, False))
+        result.append((stripped, False, is_speaker))
+        prev_was_speaker = is_speaker
+    return result
 
 
 class TextCardProvider:
     name = "textcard"
 
     async def generate(self, prompt: str, width: int = 1080, height: int = 1080) -> bytes:
-        # `prompt` here is the joke_text, not an image prompt
-        global _color_cache, _color_idx
-        _color_cache = {}
-        _color_idx = 0
-
         try:
+            parsed = _parse_lines(prompt)
+            real_lines = [t for t, blank, _ in parsed if not blank]
+            n = len(real_lines)
+            max_len = max(len(l) for l in real_lines) if real_lines else 20
+
+            # Font size
+            if n <= 4 and max_len <= 26:
+                font_size = 60
+            elif n <= 5 and max_len <= 30:
+                font_size = 54
+            elif n <= 7 and max_len <= 34:
+                font_size = 48
+            elif n <= 9:
+                font_size = 42
+            else:
+                font_size = 36
+
+            font = _load_font(font_size, bold=True)
+            small_font = _load_font(26, bold=False)
+
+            sample_bbox = font.getbbox("Mg")
+            cap_h = sample_bbox[3] - sample_bbox[1]
+            line_h = int(cap_h * 1.85)        # normal line spacing
+            blank_h = int(cap_h * 1.0)        # stanza gap (shorter than full line)
+
+            # Calculate total height
+            total_h = 0
+            for _, is_blank, _ in parsed:
+                total_h += blank_h if is_blank else line_h
+
+            start_y = (SIZE - total_h - 160) // 2
+
             img = Image.new("RGB", (SIZE, SIZE), BG)
             draw = ImageDraw.Draw(img)
+            color_map: dict = {}
 
-            lines = _wrap_text(prompt, max_chars=34)
-
-            # Choose font size based on line count
-            n = len(lines)
-            font_size = 52 if n <= 4 else 46 if n <= 6 else 40 if n <= 8 else 34
-            font = _load_font(font_size, bold=True)
-            small_font = _load_font(28, bold=False)
-
-            # Measure character width for spacing
-            bbox = font.getbbox("M")
-            char_w = bbox[2] - bbox[0]
-            line_h = int((bbox[3] - bbox[1]) * 1.6)
-
-            # Total text block height
-            total_h = len(lines) * line_h
-            start_y = (SIZE - total_h) // 2 - 60
-
-            # Draw each line centered
-            for i, line in enumerate(lines):
-                if not line:
+            y = start_y
+            for text, is_blank, _ in parsed:
+                if is_blank:
+                    y += blank_h
                     continue
-                bbox_line = font.getbbox(line) if line else (0, 0, 0, 0)
-                line_w = bbox_line[2] - bbox_line[0]
-                lx = (SIZE - line_w) // 2
-                ly = start_y + i * line_h
-                _draw_line(draw, line, lx, ly, font, char_w)
+                _draw_line_centered(draw, text, y, font, color_map)
+                y += line_h
 
-            # Divider  </> ————
-            divider_y = start_y + total_h + 50
-            sep_color = (60, 60, 60)
-            tag_text = "</>"
-            tag_bbox = small_font.getbbox(tag_text)
+            # Divider </> ———
+            div_y = y + 44
+            tag = "</>"
+            tag_bbox = small_font.getbbox(tag)
             tag_w = tag_bbox[2] - tag_bbox[0]
+            tag_h = tag_bbox[3] - tag_bbox[1]
             cx = SIZE // 2
-            draw.text((cx - tag_w // 2, divider_y), tag_text, font=small_font, fill=DIM_COLOR)
-            line_y = divider_y + (tag_bbox[3] - tag_bbox[1]) // 2
-            draw.line([(PAD, line_y), (cx - tag_w // 2 - 20, line_y)], fill=sep_color, width=1)
-            draw.line([(cx + tag_w // 2 + 20, line_y), (SIZE - PAD, line_y)], fill=sep_color, width=1)
+            draw.text((cx - tag_w // 2, div_y), tag, font=small_font, fill=DIM_COLOR)
+            mid_y = div_y + tag_h // 2
+            draw.line([(PAD, mid_y), (cx - tag_w // 2 - 24, mid_y)], fill=SEP_COLOR, width=1)
+            draw.line([(cx + tag_w // 2 + 24, mid_y), (SIZE - PAD, mid_y)], fill=SEP_COLOR, width=1)
 
             # Footer
-            footer_y = divider_y + 50
-            handle_bbox = small_font.getbbox(HANDLE)
-            handle_w = handle_bbox[2] - handle_bbox[0]
+            footer_y = div_y + tag_h + 28
+            handle_w = _text_width(small_font, HANDLE)
             draw.text(((SIZE - handle_w) // 2, footer_y), HANDLE, font=small_font, fill=DIM_COLOR)
-            tag_bbox2 = small_font.getbbox(TAGLINE)
-            tag_w2 = tag_bbox2[2] - tag_bbox2[0]
-            draw.text(((SIZE - tag_w2) // 2, footer_y + 38), TAGLINE, font=small_font, fill=(70, 70, 70))
+            tagline_w = _text_width(small_font, TAGLINE)
+            draw.text(((SIZE - tagline_w) // 2, footer_y + 36), TAGLINE,
+                      font=small_font, fill=(60, 60, 60))
 
             buf = io.BytesIO()
             img.save(buf, format="PNG", optimize=True)
             buf.seek(0)
             image_bytes = buf.read()
-            logger.info("TextCard image rendered", lines=len(lines), bytes=len(image_bytes))
+            logger.info("TextCard rendered", lines=n, font_size=font_size, bytes=len(image_bytes))
             return image_bytes
 
         except Exception as e:

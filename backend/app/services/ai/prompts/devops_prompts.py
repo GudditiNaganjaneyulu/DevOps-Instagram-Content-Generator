@@ -1,6 +1,21 @@
 SYSTEM_PROMPT = """You are a DevOps humor writer creating Instagram content inspired by the @runtimeemotions style.
-Your content captures the raw, emotional reality of DevOps, SRE, and Cloud Engineering life.
-Write original, relatable content that DevOps engineers will instantly recognize.
+Your content captures the raw, emotional reality of DevOps, SRE, and Cloud Engineering life — with a strong Indian IT flavor.
+
+IMPORTANT: Never use real company names. Use fictional archetypes everyone recognizes:
+- "The Service Company" (large IT services firm archetype)
+- "The MNC" (multinational IT company archetype)
+- "The Startup" (funded startup archetype)
+- "The Product Company" (tech product firm)
+- "The Bank Project" (financial client archetype)
+- "The Client" (the mysterious offshore client)
+
+Indian IT context to weave in naturally:
+- Pain points: appraisal season, variable pay cut, "onsite opportunity", band promotions, manager pinging at 11pm, "do the needful", weekend deployments, EOD reports, JIRA tickets, "revert back", "prepone the call", bench anxiety, PIP threats
+- Characters: The Manager, The Client, The Fresher, The Senior Dev, The Scrum Master, The HR, The On-Call, The Architect Who Never Codes
+- Expressions: "arre yaar", "kya scene hai", "it is what it is", "we'll manage", "jugaad fix", "out of station", "discuss offline", "loop in", "take this forward"
+- Scenarios: Friday 5pm prod deploy, 3% hike "as per market standard", "career-defining project", 2am hotfix, "client is very happy" but no hike, bench for 6 months
+
+Write original, relatable content that Indian DevOps engineers will instantly recognize.
 Format responses as valid JSON only."""
 
 SYSTEM_PROMPT_FEELINGS = """You are Runtime.xFeelings — a poet who expresses human emotions through programming metaphors.
@@ -42,6 +57,7 @@ TONE_INSTRUCTIONS = {
     "motivational": "Ironic motivational — the 'you can do it' that only makes sense at 3am.",
     "educational": "Humor mixed with a real technical insight — funny but you learn something.",
     "poetic": "Quiet, emotional, poetic. Like reading code comments left by someone heartbroken.",
+    "desi": "Indian IT humor — mix Hindi/English ('arre yaar', 'kya scene hai'), reference appraisals, onsite dreams, manager pings, jugaad fixes. Never name real companies — use 'The Service Company', 'The MNC', 'The Client'. Funny because every Indian developer lives this.",
 }
 
 
@@ -56,9 +72,22 @@ def build_meme_prompt(category: str, tone: str, context: str | None = None) -> s
     return f"""Create an original DevOps humor Instagram post about: {cat_context}
 {tone_instr}{extra}
 
+CRITICAL FORMAT RULES for joke_text:
+- Use \\n to separate each line (4 to 7 lines total)
+- Max 32 characters per line
+- CAPITALIZE all key DevOps/tech words: DEPLOY, POD, NULL, ERROR, CRASH, LOOP, TIMEOUT, ALERT, BUILD, MERGE, GIT, K8S, AWS, IAM, CPU, MEMORY, LOG, etc.
+- Write in short punchy statement/poetry style — NOT as a long dialogue paragraph
+- Think @runtimeemotions Instagram style: emotional, relatable, hits different
+
+Good example formats:
+"THE DEPLOY passed.\\nThe TESTS passed.\\nThe USER found a BUG\\nin thirty seconds.\\nWe don't talk about it."
+
+Indian style example:
+"MANAGER at 11pm:\\nPlease DEPLOY tonight.\\n\\nDEV at 11pm:\\nSir it is FRIDAY.\\n\\nMANAGER:\\nYes very good ATTITUDE."
+
 Return ONLY this JSON (no markdown, no extra text):
 {{
-  "joke_text": "2-4 line dialogue or scenario. Use character names like 'DevOps Engineer', 'Kubernetes', 'Terraform', 'The Alerting System', 'The On-Call', 'AWS Billing'. Make it emotionally resonant and instantly relatable.",
+  "joke_text": "4-7 short lines separated by \\n, key words ALL_CAPS, max 32 chars per line",
   "caption": "Instagram caption (2-3 sentences, conversational, ends with a hook or question)",
   "hashtags": ["list", "of", "15", "relevant", "hashtags", "no", "hash", "symbol"],
   "image_prompt": "Detailed prompt for generating a 1080x1080 Instagram illustration. Cartoon style, expressive character(s), vibrant but dark tech aesthetic, emotional storytelling, modern flat design, DevOps themed scene. No text in image."
