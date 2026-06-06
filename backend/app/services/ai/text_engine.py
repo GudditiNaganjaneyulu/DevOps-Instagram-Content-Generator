@@ -4,6 +4,7 @@ from app.services.ai.providers.gemini_provider import GeminiProvider
 from app.services.ai.providers.openrouter_provider import OpenRouterProvider
 from app.services.ai.prompts.devops_prompts import (
     SYSTEM_PROMPT,
+    SYSTEM_PROMPT_FEELINGS,
     build_meme_prompt,
     build_incident_prompt,
     build_trend_meme_prompt,
@@ -38,7 +39,8 @@ class TextGenerationEngine:
         context: str | None = None,
     ) -> tuple[dict, str]:
         user_prompt = build_meme_prompt(category, tone, context)
-        return await self._try_providers(SYSTEM_PROMPT, user_prompt)
+        system = SYSTEM_PROMPT_FEELINGS if category == "feelings" else SYSTEM_PROMPT
+        return await self._try_providers(system, user_prompt)
 
     async def generate_incident_content(self, error_type: str, raw_input: str) -> tuple[dict, str]:
         user_prompt = build_incident_prompt(error_type, raw_input)

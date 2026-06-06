@@ -56,15 +56,13 @@ async def get_generation(
 @router.get("/{gen_id}/download")
 async def download_image(
     gen_id: str,
-    current_user: UserRead = Depends(get_current_user),
     db=Depends(get_db),
 ):
+    # Public endpoint — Cloudinary URL is already access-controlled at the CDN level
     repo = GenerationRepository(db)
     doc = await repo.find_by_id(gen_id)
     if not doc:
         raise HTTPException(404, "Not found")
-    if str(doc["user_id"]) != current_user.id:
-        raise HTTPException(403, "Forbidden")
     if not doc.get("image_url"):
         raise HTTPException(404, "No image for this generation")
     return RedirectResponse(url=doc["image_url"])

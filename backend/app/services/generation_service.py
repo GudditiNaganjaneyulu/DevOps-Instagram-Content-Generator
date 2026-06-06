@@ -58,9 +58,12 @@ async def run_generation(
             "text_provider": text_provider,
         }
 
-        if request.include_image and text_result.get("image_prompt"):
+        if request.include_image:
+            # Pass joke_text to text card renderer (primary provider);
+            # AI providers receive the same string as fallback image prompt
+            card_prompt = text_result.get("joke_text") or text_result.get("image_prompt", "")
             img_result = await image_engine.generate_and_store(
-                prompt=text_result["image_prompt"],
+                prompt=card_prompt,
                 folder=f"devops-emotions/{request.category}",
             )
             updates["image_url"] = img_result["url"]

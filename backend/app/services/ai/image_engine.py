@@ -1,4 +1,5 @@
 import uuid
+from app.services.ai.providers.text_card_provider import TextCardProvider
 from app.services.ai.providers.pollinations_provider import PollinationsProvider
 from app.services.ai.providers.together_provider import StableHordeProvider
 from app.services.ai.providers.huggingface_provider import HuggingFaceProvider
@@ -12,12 +13,10 @@ logger = get_logger(__name__)
 
 class ImageGenerationEngine:
     def __init__(self):
-        # Chain: fastest free-first → slowest last
-        # Pollinations  — unlimited free, no key, bare URL
-        # StableHorde   — free crowdsourced GPUs, 512px for anonymous
-        # HuggingFace   — free hosted API (SD 1.5), classic endpoint
-        # GeminiImage   — last resort, limited free quota
+        # TextCard is always first — renders @runtimeemotions style cards via Pillow,
+        # no API key, instant, always works. AI providers are fallbacks only.
         self.providers = [
+            TextCardProvider(),
             PollinationsProvider(),
             StableHordeProvider(),
             HuggingFaceProvider(),
