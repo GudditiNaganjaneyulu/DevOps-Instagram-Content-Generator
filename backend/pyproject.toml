@@ -3,8 +3,7 @@ name = "devops-runtime-emotions-backend"
 version = "1.0.0"
 description = "DevOps Runtime Emotions AI Studio — FastAPI Backend"
 authors = ["DevOps Emotions Team"]
-readme = "README.md"
-packages = [{include = "app"}]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
