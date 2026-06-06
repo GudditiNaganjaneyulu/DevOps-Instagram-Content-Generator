@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getSession } from "next-auth/react";
 import type {
   Generation, GenerateRequest, GalleryResponse,
   Incident, Trend, AnalyticsSummary,
@@ -9,19 +10,14 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Inject JWT from localStorage on every request
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("access_token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+// Inject backend JWT from NextAuth session on every request
+api.interceptors.request.use(async (config) => {
+  const session = await getSession();
+  if (session?.backendToken) {
+    config.headers.Authorization = `Bearer ${session.backendToken}`;
   }
   return config;
 });
-
-// Token storage helpers
-export const setToken = (token: string) => localStorage.setItem("access_token", token);
-export const clearToken = () => localStorage.removeItem("access_token");
-export const getToken = () => (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
 
 // Auth
 export const authGoogle = (access_token: string) =>
