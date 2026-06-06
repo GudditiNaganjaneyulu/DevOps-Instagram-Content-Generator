@@ -31,6 +31,10 @@ def configure_logging() -> None:
 
     logging.basicConfig(level=log_level)
 
+    # Suppress noisy debug heartbeat logs from pymongo/motor and other libraries
+    for noisy in ("pymongo", "motor", "httpx", "httpcore", "asyncio"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
+
 
 def get_logger(name: str = __name__):
     return structlog.get_logger(name)
