@@ -1,5 +1,8 @@
 import uuid
 from app.services.ai.providers.pollinations_provider import PollinationsProvider
+from app.services.ai.providers.together_provider import StableHordeProvider
+from app.services.ai.providers.gemini_image_provider import GeminiImageProvider
+from app.services.ai.providers.fal_provider import FalProvider
 from app.services.ai.providers.huggingface_provider import HuggingFaceProvider
 from app.core.cloudinary_client import upload_image_bytes
 from app.core.exceptions import ProviderRateLimitError, ProviderError, AllProvidersExhaustedError
@@ -10,7 +13,19 @@ logger = get_logger(__name__)
 
 class ImageGenerationEngine:
     def __init__(self):
-        self.providers = [PollinationsProvider(), HuggingFaceProvider()]
+        # Chain: fastest/free-first → fallbacks
+        # Pollinations  — unlimited free, no key
+        # Together      — FLUX.1-schnell-Free, zero credits, needs TOGETHER_API_KEY
+        # Gemini Image  — 1500/day free, uses existing GOOGLE_AI_API_KEY
+        # Fal           — $10 free credits, fast FLUX, needs FAL_API_KEY
+        # HuggingFace   — free fallback, needs HF_API_KEY
+        self.providers = [
+            PollinationsProvider(),
+            GeminiImageProvider(),
+            StableHordeProvider(),
+            FalProvider(),
+            HuggingFaceProvider(),
+        ]
 
     async def generate_and_store(self, prompt: str, folder: str = "devops-emotions") -> dict:
         image_bytes: bytes | None = None
@@ -22,7 +37,7 @@ class ImageGenerationEngine:
                 provider_used = provider.name
                 break
             except (ProviderRateLimitError, ProviderError) as e:
-                logger.warning("Image provider failed", provider=provider.name, error=e.message)
+                logger.warning("Image provider failed", provider=provider.name, error=str(e))
                 continue
 
         if not image_bytes:

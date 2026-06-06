@@ -26,11 +26,15 @@ class Settings(BaseSettings):
     cloudinary_api_secret: str = ""
     cloudinary_upload_preset: str = "devops_emotions"
 
-    # AI Providers
+    # AI Providers — text
     groq_api_key: str = ""
     google_ai_api_key: str = ""
     openrouter_api_key: str = ""
+
+    # AI Providers — image
     huggingface_api_key: str = ""
+    stable_horde_api_key: str = "0000000000"  # anonymous key works, register at stablehorde.net for priority
+    fal_api_key: str = ""
 
     # Auth / JWT
     jwt_secret: str = "changeme_at_least_32_chars_long_secret"

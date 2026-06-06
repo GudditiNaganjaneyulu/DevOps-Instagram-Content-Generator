@@ -13,9 +13,10 @@ class PollinationsProvider:
 
     async def generate(self, prompt: str, width: int = 1080, height: int = 1080) -> bytes:
         encoded = quote(prompt)
-        url = f"{BASE_URL}/{encoded}?width={width}&height={height}&nologo=true&enhance=true"
+        # nologo/enhance require paid plan — use free params only
+        url = f"{BASE_URL}/{encoded}?width={width}&height={height}&model=flux&seed=-1"
         try:
-            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            async with httpx.AsyncClient(timeout=90, follow_redirects=True) as client:
                 resp = await client.get(url)
                 if resp.status_code != 200:
                     raise ProviderError(self.name, f"HTTP {resp.status_code}")
@@ -24,7 +25,7 @@ class PollinationsProvider:
                     raise ProviderError(self.name, f"Non-image response: {content_type}")
                 logger.info("Pollinations image generated", bytes=len(resp.content))
                 return resp.content
-        except (ProviderError,):
+        except ProviderError:
             raise
         except Exception as e:
             raise ProviderError(self.name, str(e))
