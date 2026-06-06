@@ -1,0 +1,87 @@
+[tool.poetry]
+name = "devops-runtime-emotions-backend"
+version = "1.0.0"
+description = "DevOps Runtime Emotions AI Studio — FastAPI Backend"
+authors = ["DevOps Emotions Team"]
+readme = "README.md"
+packages = [{include = "app"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+# Web framework
+fastapi = "^0.115.0"
+uvicorn = {extras = ["standard"], version = "^0.32.0"}
+python-multipart = "^0.0.12"
+
+# Database
+motor = "^3.6.0"
+pymongo = "^4.10.0"
+
+# Cache / Queue
+redis = {extras = ["hiredis"], version = "^5.2.0"}
+
+# Auth / Security
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+httpx = {extras = ["http2"], version = "^0.28.0"}
+
+# AI Providers
+groq = "^0.13.0"
+google-genai = ">=1.16.0"
+
+# Storage
+cloudinary = "^1.41.0"
+
+# Resilience
+tenacity = "^9.0.0"
+slowapi = "^0.1.9"
+
+# Scheduling
+apscheduler = "^3.10.4"
+
+# Config / Logging
+pydantic = {extras = ["email"], version = "^2.10.0"}
+pydantic-settings = "^2.6.0"
+structlog = "^24.4.0"
+
+# Observability
+opentelemetry-api = "^1.28.0"
+opentelemetry-sdk = "^1.28.0"
+opentelemetry-instrumentation-fastapi = "^0.49b0"
+
+# Utilities
+python-dateutil = "^2.9.0"
+feedparser = "^6.0.11"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+pytest-cov = "^6.0.0"
+httpx = "^0.28.0"
+mongomock-motor = "^0.0.34"
+fakeredis = {extras = ["aioredis"], version = "^2.26.0"}
+ruff = "^0.8.0"
+mypy = "^1.13.0"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
