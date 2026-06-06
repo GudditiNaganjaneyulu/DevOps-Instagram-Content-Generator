@@ -1,0 +1,23 @@
+[build]
+  base    = "frontend"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Proxy /api/v1/* to Render backend so frontend never exposes the backend URL
+[[redirects]]
+  from   = "/api/v1/*"
+  to     = "https://devops-runtime-emotions-api.onrender.com/api/v1/:splat"
+  status = 200
+  force  = true
+
+# Required for Next.js App Router — let Next handle all routing
+[[redirects]]
+  from   = "/*"
+  to     = "/.netlify/functions/___netlify-handler"
+  status = 200

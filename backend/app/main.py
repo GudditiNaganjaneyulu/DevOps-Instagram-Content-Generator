@@ -59,7 +59,12 @@ def create_app() -> FastAPI:
     # CORS
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000", "https://*.vercel.app"],
+        allow_origins=[
+            "http://localhost:3000",
+            "https://*.vercel.app",
+            "https://*.netlify.app",
+            "https://*.onrender.com",
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
