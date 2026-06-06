@@ -11,10 +11,10 @@ BASE_URL = "https://image.pollinations.ai/prompt"
 class PollinationsProvider:
     name = "pollinations"
 
-    async def generate(self, prompt: str, width: int = 1080, height: int = 1080) -> bytes:
-        encoded = quote(prompt)
-        # nologo/enhance require paid plan — use free params only
-        url = f"{BASE_URL}/{encoded}?width={width}&height={height}&model=flux&seed=-1"
+    async def generate(self, prompt: str, width: int = 1024, height: int = 1024) -> bytes:
+        encoded = quote(prompt[:500])  # keep URL short
+        # No optional params — bare URL is always free
+        url = f"{BASE_URL}/{encoded}"
         try:
             async with httpx.AsyncClient(timeout=90, follow_redirects=True) as client:
                 resp = await client.get(url)

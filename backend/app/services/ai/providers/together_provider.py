@@ -26,8 +26,8 @@ class StableHordeProvider:
                 json={
                     "prompt": prompt,
                     "params": {
-                        "width": min(width, 1024),
-                        "height": min(height, 1024),
+                        "width": 512,   # anonymous limit is 807px — stay safe
+                        "height": 512,
                         "steps": 20,
                         "n": 1,
                     },
