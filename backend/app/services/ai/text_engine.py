@@ -1,5 +1,6 @@
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from app.services.ai.providers.groq_provider import GroqProvider
+from app.services.ai.providers.openai_provider import OpenAIProvider
 from app.services.ai.providers.gemini_provider import GeminiProvider
 from app.services.ai.providers.openrouter_provider import OpenRouterProvider
 from app.services.ai.prompts.devops_prompts import (
@@ -17,7 +18,8 @@ logger = get_logger(__name__)
 
 class TextGenerationEngine:
     def __init__(self):
-        self.providers = [GroqProvider(), GeminiProvider(), OpenRouterProvider()]
+        # OpenAI first (ChatGPT quality) → Groq → Gemini → OpenRouter
+        self.providers = [OpenAIProvider(), GroqProvider(), GeminiProvider(), OpenRouterProvider()]
 
     async def _try_providers(self, system: str, user: str) -> tuple[dict, str]:
         last_error = None

@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     # AI Providers — text
     groq_api_key: str = ""
     google_ai_api_key: str = ""
+    openai_api_key: str = ""
     openrouter_api_key: str = ""
 
     # AI Providers — image

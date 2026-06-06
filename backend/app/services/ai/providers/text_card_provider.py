@@ -33,6 +33,15 @@ HIGHLIGHT_COLORS = [
     (229, 192, 123),  # orange
 ]
 
+SPEAKER_COLOR  = (130, 130, 130)   # dim gray for "Manager:", "DevOps:" labels
+CODE_COLOR     = (86,  182, 194)   # cyan for code commands (chmod, kubectl, terraform)
+
+# Unix/cloud commands that should render in code color
+CODE_COMMANDS = {
+    "chmod", "kubectl", "terraform", "docker", "git", "sudo",
+    "rm", "curl", "helm", "ansible", "vagrant", "pip", "npm",
+}
+
 _BOLD_PATHS = [
     "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf",
@@ -76,45 +85,64 @@ def _text_width(font, text: str) -> int:
     return bbox[2] - bbox[0]
 
 
-def _draw_line_centered(draw, line: str, y: int, font, color_map: dict) -> None:
+def _draw_line_centered(draw, line: str, y: int, font, color_map: dict,
+                        line_type: str = "normal") -> None:
     total_w = _text_width(font, line)
     x = (SIZE - total_w) // 2
+
+    # Speaker labels ("Manager:") — render entirely in dim gray
+    if line_type == "speaker":
+        draw.text((x, y), line, font=font, fill=SPEAKER_COLOR)
+        return
+
+    # Code lines — first token gets CODE_COLOR, rest get syntax highlight
     for token in re.split(r"(\s+)", line):
         if not token:
             continue
         if token.strip() == "":
             x += _text_width(font, token)
             continue
-        color = _word_color(token, color_map) if _is_highlight(token) else TEXT_COLOR
+        token_lower = token.lower().rstrip(":").rstrip()
+        if token_lower in CODE_COMMANDS:
+            color = CODE_COLOR
+        elif _is_highlight(token):
+            color = _word_color(token, color_map)
+        else:
+            color = TEXT_COLOR
         draw.text((x, y), token, font=font, fill=color)
         x += _text_width(font, token)
 
 
-# Speaker line pattern: "Name:" or "Name :" at start
-_SPEAKER_RE = re.compile(r"^[A-Za-z][A-Za-z ]{1,24}:\s*")
+_SPEAKER_RE  = re.compile(r"^[A-Za-z][A-Za-z0-9 ]{1,24}:\s*$")   # "Manager:" alone on a line
+_CODE_LINE_RE = re.compile(r"^(chmod|kubectl|terraform|docker|git|sudo|rm -|helm|curl)\b")
+
+
+def _line_type(text: str) -> str:
+    """Returns 'speaker', 'code', or 'normal'."""
+    if _SPEAKER_RE.match(text):
+        return "speaker"
+    if _CODE_LINE_RE.match(text.lower()):
+        return "code"
+    return "normal"
 
 
 def _parse_lines(prompt: str) -> list:
-    """
-    Returns list of (text, is_blank, is_speaker_start).
-    Blank lines (\n\n or empty) create stanza breaks.
-    Lines starting with "Name:" get extra top spacing.
-    """
+    """Returns list of (text, is_blank, line_type)."""
     raw = re.split(r"\\n|\n", prompt.strip())
     result = []
-    prev_was_speaker = False
+    prev_type = "normal"
     for raw_line in raw:
         stripped = raw_line.strip()
         if not stripped:
-            result.append(("", True, False))
-            prev_was_speaker = False
+            result.append(("", True, "blank"))
+            prev_type = "blank"
             continue
-        is_speaker = bool(_SPEAKER_RE.match(stripped))
-        # Insert blank gap before a new speaker (if previous wasn't already blank)
-        if is_speaker and result and not result[-1][1] and not prev_was_speaker:
-            result.append(("", True, False))
-        result.append((stripped, False, is_speaker))
-        prev_was_speaker = is_speaker
+        ltype = _line_type(stripped)
+        # Auto-gap before a new speaker if no blank already
+        if ltype == "speaker" and result and prev_type not in ("blank", "speaker"):
+            result.append(("", True, "blank"))
+        result.append((stripped, False, ltype))
+        prev_type = ltype
     return result
 
 
@@ -160,11 +188,11 @@ class TextCardProvider:
             color_map: dict = {}
 
             y = start_y
-            for text, is_blank, _ in parsed:
+            for text, is_blank, ltype in parsed:
                 if is_blank:
                     y += blank_h
                     continue
-                _draw_line_centered(draw, text, y, font, color_map)
+                _draw_line_centered(draw, text, y, font, color_map, ltype)
                 y += line_h
 
             # Divider </> ———

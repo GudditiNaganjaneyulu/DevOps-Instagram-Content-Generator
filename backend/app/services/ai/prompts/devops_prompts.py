@@ -79,15 +79,29 @@ CRITICAL FORMAT RULES for joke_text:
 - Write in short punchy statement/poetry style — NOT as a long dialogue paragraph
 - Think @runtimeemotions Instagram style: emotional, relatable, hits different
 
-Good example formats:
-"THE DEPLOY passed.\\nThe TESTS passed.\\nThe USER found a BUG\\nin thirty seconds.\\nWe don't talk about it."
+Pick ONE of these proven formats (vary across generations):
 
-Indian style example:
-"MANAGER at 11pm:\\nPlease DEPLOY tonight.\\n\\nDEV at 11pm:\\nSir it is FRIDAY.\\n\\nMANAGER:\\nYes very good ATTITUDE."
+FORMAT A — Life metaphor:
+"Love is like PRODUCTION.\\nEveryone wants ACCESS.\\nNobody wants RESPONSIBILITY."
+
+FORMAT B — Character dialogue (blank line between speakers):
+"Manager:\\n'Quick deployment. 5 minutes.'\\n\\nThe entire WEEKEND:\\nMAJOR INCIDENT"
+
+FORMAT C — Code command punchline:
+"She removed me from her life.\\nchmod 000 feelings\\nPermission DENIED."
+
+FORMAT D — Step list:
+"Step 1: PANIC\\nStep 2: GOOGLE\\nStep 3: Stack Overflow\\nStep 4: Claim VICTORY"
+
+FORMAT E — Comparison twist:
+"KUBERNETES solves problems\\nyou didn't know you had\\nby creating problems\\nyou've never seen before."
+
+FORMAT F — Indian IT style:
+"MANAGER at 11pm:\\nPlease DEPLOY tonight.\\n\\nDEV:\\nSir it is FRIDAY.\\n\\nMANAGER:\\nYes. Very good ATTITUDE."
 
 Return ONLY this JSON (no markdown, no extra text):
 {{
-  "joke_text": "4-7 short lines separated by \\n, key words ALL_CAPS, max 32 chars per line",
+  "joke_text": "4-8 short lines separated by \\n. Blank line (\\n\\n) between stanza/speaker changes. Key tech words ALL_CAPS. Max 34 chars per line. Code commands allowed (chmod, terraform, kubectl).",
   "caption": "Instagram caption (2-3 sentences, conversational, ends with a hook or question)",
   "hashtags": ["list", "of", "15", "relevant", "hashtags", "no", "hash", "symbol"],
   "image_prompt": "Detailed prompt for generating a 1080x1080 Instagram illustration. Cartoon style, expressive character(s), vibrant but dark tech aesthetic, emotional storytelling, modern flat design, DevOps themed scene. No text in image."
