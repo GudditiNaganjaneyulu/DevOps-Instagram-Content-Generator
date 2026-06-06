@@ -12,7 +12,7 @@
 # Proxy /api/v1/* to Render backend so frontend never exposes the backend URL
 [[redirects]]
   from   = "/api/v1/*"
-  to     = "https://devops-runtime-emotions-api.onrender.com/api/v1/:splat"
+  to     = "https://api.gudditinaganjaneyulu.qzz.io/api/v1/:splat"
   status = 200
   force  = true
 

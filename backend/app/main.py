@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -64,6 +65,8 @@ def create_app() -> FastAPI:
             "https://*.vercel.app",
             "https://*.netlify.app",
             "https://*.onrender.com",
+            "https://web.gudditinaganjaneyulu.qzz.io",
+            "https://api.gudditinaganjaneyulu.qzz.io",
         ],
         allow_credentials=True,
         allow_methods=["*"],
@@ -87,3 +90,9 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=False)

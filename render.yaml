@@ -1,12 +1,12 @@
 services:
   - type: web
     name: devops-runtime-emotions-api
-    env: python
+    runtime: python
     region: oregon
     plan: free
     rootDir: backend
     buildCommand: pip install poetry==1.8.3 && poetry install --no-dev --no-interaction
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
     healthCheckPath: /health
     envVars:
       - key: MONGODB_URL
@@ -37,8 +37,6 @@ services:
         sync: false
       - key: GITHUB_SECRET
         sync: false
-      - key: PORT
-        value: "8000"
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
