@@ -96,10 +96,12 @@ def _setup_loki(settings) -> bool:
         root = logging.getLogger()
         root.addHandler(loki_handler)
 
-        logger.info("Loki log handler configured", url=settings.loki_url)
+        # Use print() here — logger may not be fully initialised yet at startup
+        print(f"[telemetry] Loki log handler configured → {settings.loki_url}", flush=True)
         return True
     except Exception as e:
-        logger.warning("Loki handler setup failed", error=str(e))
+        # Never crash the app over observability. print() avoids re-entering structlog.
+        print(f"[telemetry] Loki handler setup failed — {e}", flush=True)
         return False
 
 
@@ -111,7 +113,7 @@ def setup_telemetry(app) -> None:
 
     # ── OTLP (traces → Tempo) ──────────────────────────────────────────────────
     if not settings.otel_endpoint:
-        logger.info("OTEL_ENDPOINT not set — trace export disabled")
+        print("[telemetry] OTEL_ENDPOINT not set — trace export disabled", flush=True)
         return
 
     try:
@@ -143,7 +145,7 @@ def setup_telemetry(app) -> None:
         FastAPIInstrumentor.instrument_app(app)
         HTTPXClientInstrumentor().instrument()
 
-        logger.info("OTLP trace exporter configured", endpoint=base)
+        print(f"[telemetry] OTLP trace exporter configured → {base}", flush=True)
 
     except Exception as e:
-        logger.warning("Telemetry setup failed — continuing without tracing", error=str(e))
+        print(f"[telemetry] OTLP setup failed — continuing without tracing: {e}", flush=True)
