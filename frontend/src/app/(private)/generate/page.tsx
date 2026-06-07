@@ -6,6 +6,7 @@ import { useGenerationStore } from "@/stores/generation";
 import Image from "next/image";
 import { Download, RefreshCw, Wand2, Copy, Check } from "lucide-react";
 import { downloadImage } from "@/lib/api";
+import { ShareButtons } from "@/components/ShareButtons";
 import { CATEGORY_LABELS, CATEGORY_EMOJIS } from "@/lib/utils";
 import type { ContentCategory, ContentTone, ContentType } from "@/types";
 
@@ -166,6 +167,14 @@ export default function GeneratePage() {
                   </a>
                 )}
               </div>
+              {result.image_url && (
+                <ShareButtons
+                  imageUrl={result.image_url}
+                  caption={result.caption ?? ""}
+                  hashtags={result.hashtags ?? []}
+                  downloadUrl={downloadImage(result.id)}
+                />
+              )}
               <p className="text-xs text-muted-foreground text-center">
                 {result.text_provider} · {result.generation_time_ms}ms
               </p>

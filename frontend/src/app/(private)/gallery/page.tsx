@@ -3,8 +3,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useGallery } from "@/hooks/useGallery";
-import { Download, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { downloadImage } from "@/lib/api";
+import { ShareButtons } from "@/components/ShareButtons";
 import { CATEGORY_LABELS, CATEGORY_EMOJIS, formatRelativeTime } from "@/lib/utils";
 import type { ContentCategory } from "@/types";
 
@@ -71,14 +72,15 @@ export default function GalleryPage() {
                     height={400}
                     className="w-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <a
-                      href={downloadImage(item.id)}
-                      download
-                      className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-                    >
-                      <Download className="w-5 h-5 text-white" />
-                    </a>
+                  {/* Desktop hover overlay */}
+                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex items-center justify-center">
+                    <ShareButtons
+                      imageUrl={item.image_url ?? item.thumbnail_url ?? ""}
+                      caption={item.caption ?? ""}
+                      hashtags={item.hashtags ?? []}
+                      downloadUrl={downloadImage(item.id)}
+                      compact
+                    />
                   </div>
                 </div>
               ) : (
@@ -86,7 +88,7 @@ export default function GalleryPage() {
                   <p className="text-xs text-muted-foreground font-mono text-center">{item.joke_text}</p>
                 </div>
               )}
-              <div className="p-3 space-y-1">
+              <div className="p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                     {CATEGORY_EMOJIS[item.category]} {CATEGORY_LABELS[item.category]}
@@ -95,6 +97,18 @@ export default function GalleryPage() {
                 </div>
                 {item.caption && (
                   <p className="text-xs text-muted-foreground line-clamp-2">{item.caption}</p>
+                )}
+                {/* Mobile share row — always visible on small screens */}
+                {item.image_url && (
+                  <div className="md:hidden pt-1">
+                    <ShareButtons
+                      imageUrl={item.image_url ?? item.thumbnail_url ?? ""}
+                      caption={item.caption ?? ""}
+                      hashtags={item.hashtags ?? []}
+                      downloadUrl={downloadImage(item.id)}
+                      compact
+                    />
+                  </div>
                 )}
               </div>
             </motion.div>
