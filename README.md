@@ -14,6 +14,8 @@
 
 **[Live Demo](https://web.gudditinaganjaneyulu.qzz.io)** · **[API Docs](https://api.gudditinaganjaneyulu.qzz.io/docs)** · **[Grafana Dashboard](https://ganji7337.grafana.net/public-dashboards/5fc1b2b6533245709312e59c897a2372)**
 
+![AI Content Generation Pipeline](docs/ai-pipeline.png)
+
 </div>
 
 ---
@@ -950,6 +952,9 @@ make seed         # Seed sample generations into MongoDB
 ---
 
 ## Screenshots
+
+### AI Content Generation Pipeline
+![AI Content Generation Pipeline](docs/ai-pipeline.png)
 
 ### Content Generation and Deployment Workflow
 ![Content Generation and Deployment Workflow](docs/content-deployment-workflow.png)
