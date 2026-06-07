@@ -111,41 +111,42 @@ def setup_telemetry(app) -> None:
     # ── Loki (logs) ────────────────────────────────────────────────────────────
     _setup_loki(settings)
 
-    # ── OTLP (traces → Tempo) ──────────────────────────────────────────────────
-    if not settings.otel_endpoint:
-        print("[telemetry] OTEL_ENDPOINT not set — trace export disabled", flush=True)
-        return
-
-    try:
-        from opentelemetry import trace
-        from opentelemetry.sdk.trace import TracerProvider
-        from opentelemetry.sdk.trace.export import BatchSpanProcessor
-        from opentelemetry.sdk.resources import Resource, SERVICE_NAME
-        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-
-        base = settings.otel_endpoint.rstrip("/")
-        headers = _parse_headers(settings.otel_headers) if settings.otel_headers else {}
-
-        resource = Resource(attributes={
-            SERVICE_NAME: "devops-runtime-emotions-api",
-            "deployment.environment": settings.app_env,
-            "service.version": settings.app_version,
-        })
-
-        trace_exporter = OTLPSpanExporter(
-            endpoint=f"{base}/v1/traces",
-            headers=headers,
-        )
-        trace_provider = TracerProvider(resource=resource)
-        trace_provider.add_span_processor(BatchSpanProcessor(trace_exporter))
-        trace.set_tracer_provider(trace_provider)
-
-        FastAPIInstrumentor.instrument_app(app)
-        HTTPXClientInstrumentor().instrument()
-
-        print(f"[telemetry] OTLP trace exporter configured → {base}", flush=True)
-
-    except Exception as e:
-        print(f"[telemetry] OTLP setup failed — continuing without tracing: {e}", flush=True)
+    # ── OTLP (traces → Tempo) — disabled until token is rotated ──────────────
+    # Uncomment when OTEL_HEADERS has a valid traces:write token
+    # if not settings.otel_endpoint:
+    #     print("[telemetry] OTEL_ENDPOINT not set — trace export disabled", flush=True)
+    #     return
+    #
+    # try:
+    #     from opentelemetry import trace
+    #     from opentelemetry.sdk.trace import TracerProvider
+    #     from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    #     from opentelemetry.sdk.resources import Resource, SERVICE_NAME
+    #     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    #     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    #     from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+    #
+    #     base = settings.otel_endpoint.rstrip("/")
+    #     headers = _parse_headers(settings.otel_headers) if settings.otel_headers else {}
+    #
+    #     resource = Resource(attributes={
+    #         SERVICE_NAME: "devops-runtime-emotions-api",
+    #         "deployment.environment": settings.app_env,
+    #         "service.version": settings.app_version,
+    #     })
+    #
+    #     trace_exporter = OTLPSpanExporter(
+    #         endpoint=f"{base}/v1/traces",
+    #         headers=headers,
+    #     )
+    #     trace_provider = TracerProvider(resource=resource)
+    #     trace_provider.add_span_processor(BatchSpanProcessor(trace_exporter))
+    #     trace.set_tracer_provider(trace_provider)
+    #
+    #     FastAPIInstrumentor.instrument_app(app)
+    #     HTTPXClientInstrumentor().instrument()
+    #
+    #     print(f"[telemetry] OTLP trace exporter configured → {base}", flush=True)
+    #
+    # except Exception as e:
+    #     print(f"[telemetry] OTLP setup failed — continuing without tracing: {e}", flush=True)
