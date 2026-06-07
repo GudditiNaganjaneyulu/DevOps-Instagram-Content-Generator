@@ -12,7 +12,7 @@
 [![Grafana](https://img.shields.io/badge/Grafana-Loki-F46800?logo=grafana&logoColor=white)](https://grafana.com)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-**[Live Demo](https://web.gudditinaganjaneyulu.qzz.io)** · **[API Docs](https://api.gudditinaganjaneyulu.qzz.io/docs)**
+**[Live Demo](https://web.gudditinaganjaneyulu.qzz.io)** · **[API Docs](https://api.gudditinaganjaneyulu.qzz.io/docs)** · **[Grafana Dashboard](https://ganji7337.grafana.net/public-dashboards/5fc1b2b6533245709312e59c897a2372)**
 
 </div>
 
@@ -456,6 +456,8 @@ daily_generation():
 ---
 
 ### 8. Observability Flow — Logs to Grafana Loki
+
+**[View Live Grafana Dashboard →](https://ganji7337.grafana.net/public-dashboards/5fc1b2b6533245709312e59c897a2372)**
 
 ```
 Code calls:

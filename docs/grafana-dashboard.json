@@ -30,6 +30,7 @@
         "query": "label_values({app=\"devops-runtime-emotions\"}, level)",
         "multi": true,
         "includeAll": true,
+        "allValue": ".*",
         "current": { "text": "All", "value": "$__all" },
         "refresh": 2
       }
@@ -44,7 +45,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
-          "expr": "sum by (level) (rate({app=\"devops-runtime-emotions\", env=\"production\", level=~\"$level\"} [2m]))",
+          "expr": "sum by (level) (rate({app=\"devops-runtime-emotions\", env=\"production\", level=~\"$level\"} [5m]))",
           "legendFormat": "{{level}}",
           "refId": "A"
         }
@@ -70,7 +71,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
-          "expr": "rate({app=\"devops-runtime-emotions\", env=\"production\", level=\"error\"} [2m])",
+          "expr": "rate({app=\"devops-runtime-emotions\", env=\"production\", level=\"error\"} [5m])",
           "legendFormat": "errors/sec",
           "refId": "A"
         }
@@ -100,7 +101,7 @@
           "thresholds": { "steps": [{ "color": "red", "value": 0 }] }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" }
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
     },
     {
       "id": 4,
@@ -116,8 +117,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "color": { "fixedColor": "#FF9830", "mode": "fixed" },
-          "thresholds": { "steps": [{ "color": "orange", "value": 0 }] }
+          "color": { "fixedColor": "#FF9830", "mode": "fixed" }
         }
       },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
@@ -149,7 +149,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
-          "expr": "sum(count_over_time({app=\"devops-runtime-emotions\", env=\"production\"} |= \"generation\" | json | event =~ \".*generat.*\" [24h]))",
+          "expr": "sum(count_over_time({app=\"devops-runtime-emotions\", env=\"production\"} |= \"Generation completed\" [24h]))",
           "refId": "A"
         }
       ],
@@ -162,32 +162,32 @@
     },
     {
       "id": 7,
-      "title": "AI Provider Errors",
+      "title": "Provider Fallbacks (24h)",
       "type": "stat",
       "gridPos": { "x": 16, "y": 8, "w": 4, "h": 5 },
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
-          "expr": "sum(count_over_time({app=\"devops-runtime-emotions\", env=\"production\", level=\"error\"} |= \"provider\" [24h]))",
+          "expr": "sum(count_over_time({app=\"devops-runtime-emotions\", env=\"production\", level=\"warning\"} |= \"provider\" [24h]))",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "color": { "fixedColor": "#F2495C", "mode": "fixed" }
+          "color": { "fixedColor": "#FF9830", "mode": "fixed" }
         }
       },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
     },
     {
       "id": 8,
-      "title": "Loki Handler Health",
+      "title": "Structured Logs (24h)",
       "type": "stat",
       "gridPos": { "x": 20, "y": 8, "w": 4, "h": 5 },
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
-          "expr": "sum(count_over_time({app=\"devops-runtime-emotions\"} |= \"[telemetry]\" [24h]))",
+          "expr": "sum(count_over_time({app=\"devops-runtime-emotions\", env=\"production\", level=\"info\"} [24h]))",
           "refId": "A"
         }
       ],
@@ -196,24 +196,28 @@
           "color": { "fixedColor": "#73BF69", "mode": "fixed" }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "text": {} }
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
     },
     {
       "id": 9,
       "title": "Log Volume by Logger Module",
-      "type": "barchart",
+      "type": "timeseries",
       "gridPos": { "x": 0, "y": 13, "w": 12, "h": 8 },
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
-          "expr": "sum by (logger) (count_over_time({app=\"devops-runtime-emotions\", env=\"production\"} | json [1h]))",
+          "expr": "sum by (logger) (count_over_time({app=\"devops-runtime-emotions\", env=\"production\"} | json | logger != \"\" [10m]))",
           "legendFormat": "{{logger}}",
-          "refId": "A",
-          "instant": true
+          "refId": "A"
         }
       ],
-      "options": { "barWidth": 0.7, "groupWidth": 0.7, "orientation": "horizontal" },
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 5, "lineWidth": 2 },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" } }
     },
     {
       "id": 10,
@@ -223,7 +227,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
-          "expr": "sum(count_over_time({app=\"devops-runtime-emotions\", env=\"production\"} |= \"generation\" [10m]))",
+          "expr": "sum(count_over_time({app=\"devops-runtime-emotions\", env=\"production\"} |= \"Generation completed\" [10m]))",
           "legendFormat": "generations",
           "refId": "A"
         },
@@ -255,7 +259,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
-          "expr": "{app=\"devops-runtime-emotions\", env=\"production\", level=\"error\"} | json | line_format \"[{{.logger}}] {{.event}}\"",
+          "expr": "{app=\"devops-runtime-emotions\", env=\"production\", level=\"error\"} | json | drop __error__, __error_details__",
           "refId": "A"
         }
       ],
@@ -277,7 +281,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
-          "expr": "{app=\"devops-runtime-emotions\", env=\"production\", level=~\"$level\"} | json | line_format \"[{{.level}}] [{{.logger}}] {{.event}}\"",
+          "expr": "{app=\"devops-runtime-emotions\", env=\"production\", level=~\"$level\"}",
           "refId": "A"
         }
       ],
