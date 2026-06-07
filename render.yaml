@@ -43,6 +43,10 @@ services:
         sync: false
       - key: GITHUB_SECRET
         sync: false
+      - key: OTEL_ENDPOINT
+        sync: false
+      - key: OTEL_HEADERS
+        sync: false
       - key: APP_ENV
         value: production
       - key: APP_DEBUG

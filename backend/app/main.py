@@ -86,6 +86,10 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(api_router, prefix=settings.api_prefix)
 
+    # Telemetry (after routers so FastAPI instrumentor sees all routes)
+    from app.core.telemetry import setup_telemetry
+    setup_telemetry(app)
+
     return app
 
 

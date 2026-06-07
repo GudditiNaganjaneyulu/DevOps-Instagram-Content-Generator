@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     github_id: str = ""
     github_secret: str = ""
 
+    # Observability — Grafana Cloud OTLP
+    otel_endpoint: str = ""   # e.g. https://otlp-gateway-prod-us-east-0.grafana.net/otlp
+    otel_headers: str = ""    # e.g. Authorization=Basic <base64token>
+
     # Scheduler
     daily_generation_limit: int = 5
     scheduler_hour: int = 9
