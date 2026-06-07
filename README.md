@@ -831,20 +831,280 @@ Distributed traces (every HTTP request + AI provider call as a child span) flow 
 
 ## API Reference
 
+> **Live interactive docs:** [api.gudditinaganjaneyulu.qzz.io/docs](https://api.gudditinaganjaneyulu.qzz.io/docs) (Swagger UI) · [/redoc](https://api.gudditinaganjaneyulu.qzz.io/redoc) (ReDoc)
+>
+> All endpoints except `/health` and `/api/v1/auth/*` require `Authorization: Bearer <jwt>`.
+
+---
+
+### Authentication
+
+#### `POST /api/v1/auth/google`
+Exchange a Google OAuth access token for a JWT.
+
+**Request**
+```json
+{
+  "access_token": "ya29.a0AfH...",
+  "provider": "google"
+}
 ```
-POST  /api/v1/generate/             Generate text card + image
-GET   /api/v1/generate/status/{id}  Poll async job status
-GET   /api/v1/gallery               Paginated gallery (filter by category)
-GET   /api/v1/gallery/{id}/download Download original image
-POST  /api/v1/incidents/analyze     Error log → root cause + meme
-GET   /api/v1/trends                Trending DevOps topics
-POST  /api/v1/trends/{id}/generate  Generate meme for a trend
-GET   /api/v1/analytics/summary     Usage stats + provider health
-POST  /api/v1/auth/google           OAuth exchange → JWT
-GET   /health                       DB + Redis + provider status
+**Response `200`**
+```json
+{
+  "access_token": "eyJhbGci...",
+  "refresh_token": "eyJhbGci...",
+  "token_type": "bearer",
+  "user": {
+    "id": "6650abc123",
+    "email": "user@gmail.com",
+    "name": "Naganjaneyulu",
+    "image": "https://lh3.googleusercontent.com/..."
+  }
+}
 ```
 
-Full interactive docs at `/docs` (Swagger UI) and `/redoc`.
+#### `POST /api/v1/auth/github`
+Same shape as above — exchange GitHub OAuth access token.
+
+#### `POST /api/v1/auth/refresh`
+```json
+{ "refresh_token": "eyJhbGci..." }
+```
+Returns `{ "access_token": "...", "token_type": "bearer" }`.
+
+---
+
+### Users
+
+#### `GET /api/v1/users/me`
+Returns the authenticated user's profile.
+
+**Response**
+```json
+{
+  "id": "6650abc123",
+  "email": "user@gmail.com",
+  "name": "Naganjaneyulu",
+  "role": "user",
+  "usage": { "total_generations": 12, "today_count": 3 }
+}
+```
+
+#### `PATCH /api/v1/users/me`
+Update user settings (theme, daily_limit, etc.).
+
+#### `GET /api/v1/users/me/usage`
+Returns `total_generations` and `today_count`.
+
+---
+
+### Content Generation
+
+#### `POST /api/v1/generate/`
+The core endpoint — runs the full AI pipeline and returns a 1080×1080 card.
+
+**Request**
+```json
+{
+  "category": "kubernetes",
+  "tone": "sarcastic",
+  "content_type": "meme",
+  "context": "My pods keep OOMKilling at 3am",
+  "include_image": true,
+  "image_style": "dark_tech"
+}
+```
+
+| Field | Type | Options |
+|---|---|---|
+| `category` | enum | `kubernetes` `docker` `terraform` `aws` `azure` `gcp` `cicd` `incident` `observability` `security` `platform` `sre` `ai_engineering` |
+| `tone` | enum | `sarcastic` `empathetic` `dark_humor` `motivational` `educational` |
+| `content_type` | enum | `meme` `comic` `incident` `trend` |
+| `context` | string? | Optional extra context for the AI prompt |
+| `include_image` | bool | Default `true` |
+| `image_style` | string | Default `"dark_tech"` |
+
+**Response `201`**
+```json
+{
+  "id": "6a254a532f0231bf6f5676f2",
+  "user_id": "6650abc123",
+  "status": "completed",
+  "category": "kubernetes",
+  "tone": "sarcastic",
+  "content_type": "meme",
+  "joke_text": "Manager said '5 min deploy'.\nThe entire weekend:\nMAJOR INCIDENT",
+  "caption": "Every Friday deploy hits different when your manager says 'quick change'...",
+  "hashtags": ["devops", "kubernetes", "k8s", "sre", "oncall"],
+  "image_url": "https://res.cloudinary.com/djty5k2x9/image/upload/v1/...",
+  "thumbnail_url": "https://res.cloudinary.com/djty5k2x9/image/upload/c_thumb/...",
+  "text_provider": "groq",
+  "image_provider": "text_card",
+  "generation_time_ms": 7648,
+  "created_at": "2026-06-07T10:39:28Z"
+}
+```
+
+#### `GET /api/v1/generate/status/{gen_id}`
+Poll status of an async generation job.
+
+---
+
+### Gallery
+
+#### `GET /api/v1/gallery/`
+Paginated list of the authenticated user's generations.
+
+**Query params**
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `page` | int | `1` | Page number |
+| `limit` | int | `20` | Items per page (max 50) |
+| `category` | string? | — | Filter by category |
+| `content_type` | string? | — | Filter by content type |
+
+**Response**
+```json
+{
+  "items": [ { ...GenerationRead } ],
+  "total": 42,
+  "page": 1,
+  "limit": 20,
+  "pages": 3
+}
+```
+
+#### `GET /api/v1/gallery/{gen_id}`
+Single generation by ID.
+
+#### `GET /api/v1/gallery/{gen_id}/download`
+Redirects (`302`) to the Cloudinary original image URL. Public — no auth required.
+
+---
+
+### Incident Analyzer
+
+#### `POST /api/v1/incidents/analyze`
+Paste a raw error log — get AI root-cause analysis + a meme.
+
+**Request**
+```json
+{
+  "raw_input": "Back-off restarting failed container\nCrashLoopBackOff: exit code 137\nOOMKilled",
+  "generate_meme": true
+}
+```
+
+**Response `201`**
+```json
+{
+  "id": "6a254b...",
+  "error_type": "OOMKilled",
+  "root_cause": "Container exceeded memory limit — exit code 137 confirms OOM kill by kernel",
+  "funny_caption": "Your pod died the way it lived: quietly, at 3am, with no logs",
+  "generation_id": "6a254a..."
+}
+```
+
+Supported error types: `CrashLoopBackOff` · `OOMKilled` · `ImagePullBackOff` · `TerraformError` · `AWSBillingSpike` · `GitHubActionFailure` · `DockerBuildFailure`
+
+#### `GET /api/v1/incidents/`
+Returns last 50 incidents for the authenticated user.
+
+---
+
+### Trends
+
+#### `GET /api/v1/trends/`
+Returns trending DevOps topics scraped from Reddit (`r/devops`, `r/kubernetes`) and Hacker News.
+
+**Query params:** `limit` (1–50, default 20)
+
+**Response**
+```json
+[
+  {
+    "id": "6a254c...",
+    "title": "Kubernetes 1.32 drops Dockershim support",
+    "source": "reddit",
+    "score": 1842,
+    "url": "https://reddit.com/r/kubernetes/...",
+    "category": "kubernetes",
+    "generated": false
+  }
+]
+```
+
+#### `POST /api/v1/trends/{trend_id}/generate`
+Generate a meme for a specific trending topic. Returns a `GenerationRead` object.
+
+---
+
+### Analytics
+
+#### `GET /api/v1/analytics/summary`
+Platform-wide stats + provider health from the last 10 completions.
+
+**Response**
+```json
+{
+  "total_images": 156,
+  "completed": 149,
+  "failed": 7,
+  "success_rate": 0.955,
+  "user_total": 12,
+  "today_count": 3,
+  "providers": {
+    "groq": 6,
+    "openai": 3,
+    "gemini": 1
+  }
+}
+```
+
+#### `GET /api/v1/analytics/usage`
+Daily generation breakdown for the last 30 days.
+
+```json
+{
+  "daily_breakdown": [
+    { "date": "2026-06-07", "count": 3 },
+    { "date": "2026-06-06", "count": 8 }
+  ]
+}
+```
+
+---
+
+### Scheduler (Admin only)
+
+#### `POST /api/v1/scheduler/run`
+Manually trigger the daily generation job. Requires `role: admin`.
+
+#### `GET /api/v1/scheduler/status`
+Returns APScheduler state and next scheduled run times.
+
+---
+
+### Health
+
+#### `GET /health`
+No auth required. Returns connectivity status for all dependencies.
+
+**Response**
+```json
+{
+  "status": "ok",
+  "version": "1.0.0",
+  "env": "production",
+  "mongodb": "connected",
+  "redis": "connected"
+}
+```
+
+`status` is `"degraded"` if any dependency is unreachable.
 
 ---
 
