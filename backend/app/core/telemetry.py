@@ -47,7 +47,6 @@ class _LokiHandler(logging.Handler):
             stream_labels = {
                 **self._labels,
                 "level": record.levelname.lower(),
-                "logger": record.name,
             }
 
             payload = {
@@ -89,9 +88,9 @@ def _setup_loki(settings) -> bool:
             },
         )
         loki_handler.setLevel(logging.INFO)
-        loki_handler.setFormatter(
-            logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
-        )
+        # structlog JSONRenderer already put everything into record.msg as a JSON
+        # string — pass it through as-is so Loki can parse with | json
+        loki_handler.setFormatter(logging.Formatter("%(message)s"))
 
         # Attach to root logger so structlog output (which writes to stdlib) is captured
         root = logging.getLogger()
