@@ -1,6 +1,8 @@
+<div align="center">
+
 # DevOps Runtime Emotions AI Studio
 
-> Full-stack SaaS platform that auto-generates DevOps-themed Instagram humor — text cards, memes, and incident posts — powered by a multi-provider AI fallback chain, rendered server-side with Pillow, and shipped with one-click WhatsApp/Instagram sharing.
+**Auto-generate DevOps-themed Instagram humor using AI — memes, text cards, incident posts — with one-click sharing to WhatsApp and Instagram.**
 
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -10,9 +12,28 @@
 [![Grafana](https://img.shields.io/badge/Grafana-Loki-F46800?logo=grafana&logoColor=white)](https://grafana.com)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-Inspired by [@runtimeemotions](https://www.instagram.com/runtimeemotions) — applied to Kubernetes crashes, Terraform nightmares, 3am incidents, and Indian IT culture.
+**[Live Demo](https://web.gudditinaganjaneyulu.qzz.io)** · **[API Docs](https://api.gudditinaganjaneyulu.qzz.io/docs)**
 
-**Live demo:** [web.gudditinaganjaneyulu.qzz.io](https://web.gudditinaganjaneyulu.qzz.io) · **API:** [api.gudditinaganjaneyulu.qzz.io/docs](https://api.gudditinaganjaneyulu.qzz.io/docs)
+</div>
+
+---
+
+## How It Works — At a Glance
+
+> Pick a category → AI writes the joke → Pillow renders the card → share to Instagram in one tap.
+
+![Content Generation and Deployment Workflow](docs/content-deployment-workflow.png)
+
+*Every component from GitHub push to Instagram share — Grafana monitors it all in real time.*
+
+---
+
+## System Architecture
+
+| Components | User Flow |
+|:---:|:---:|
+| ![Architecture Overview](docs/architecture-overview.png) | ![User Flow](docs/user-flow.png) |
+| **6 layers:** Frontend · Backend · AI Engines · Data · Observability · External APIs | **Auth path:** Browser → Netlify → NextAuth → Google OAuth → FastAPI JWT validation |
 
 ---
 
@@ -20,11 +41,16 @@ Inspired by [@runtimeemotions](https://www.instagram.com/runtimeemotions) — ap
 
 Users log in with Google, pick a DevOps category and tone, hit Generate — and within seconds get a styled 1080×1080 Instagram card with a caption, hashtags, and one-click share to WhatsApp or Instagram. No design skills needed.
 
-The platform also:
-- Analyzes raw error logs (`CrashLoopBackOff`, `OOMKilled`, Terraform state conflicts) and generates an incident meme
-- Monitors Reddit (`r/devops`, `r/kubernetes`) and Hacker News for trending DevOps topics and auto-generates content
-- Runs a daily scheduler that generates 1–5 posts hands-free
-- Ships structured JSON logs to Grafana Loki for full observability
+| Feature | What happens |
+|---|---|
+| **Content Generation** | Pick category + tone → 4-provider AI text chain → 5-provider image chain → 1080×1080 card |
+| **Incident Analyzer** | Paste `CrashLoopBackOff` / `OOMKilled` / Terraform error → AI root cause + meme |
+| **Trend Engine** | Monitors Reddit `r/devops` + Hacker News → auto-generates trending content |
+| **Scheduler** | Generates 1–5 posts daily, hands-free, no manual trigger needed |
+| **Observability** | Structured JSON logs → Grafana Loki · OTLP traces → Grafana Tempo |
+| **Social Sharing** | WhatsApp deep link · Instagram Web Share API (native mobile share sheet) |
+
+![Platform Challenges](docs/platform-challenges.png)
 
 ---
 
@@ -70,7 +96,11 @@ The platform also:
 
 ## How It Works — Complete Flow
 
+![Data Flow](docs/data-flow.png)
+
 ### 1. Authentication Flow
+
+![User Flow](docs/user-flow.png)
 
 ```
 User visits app
@@ -919,13 +949,23 @@ make seed         # Seed sample generations into MongoDB
 
 ## Screenshots
 
-> Generation Studio — configure category, tone, and optional context
+### Content Generation and Deployment Workflow
+![Content Generation and Deployment Workflow](docs/content-deployment-workflow.png)
 
-> Gallery — browse all generated cards with hover share overlay
+### Architecture Overview
+![Architecture Overview](docs/architecture-overview.png)
 
-> Incident Analyzer — paste a CrashLoopBackOff log, get a meme
+### System Components (Dark)
+![Architecture Overview Dark](docs/architecture-overview-dark.png)
 
-> Grafana Dashboard — generation rate, P95 latency, provider wins
+### Platform Challenges
+![Platform Challenges](docs/platform-challenges.png)
+
+### Web Application User Flow
+![User Flow](docs/user-flow.png)
+
+### Request Data Flow
+![Data Flow](docs/data-flow.png)
 
 ---
 
