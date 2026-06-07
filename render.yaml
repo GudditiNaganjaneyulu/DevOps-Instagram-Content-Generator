@@ -43,6 +43,12 @@ services:
         sync: false
       - key: GITHUB_SECRET
         sync: false
+      - key: LOKI_URL
+        sync: false
+      - key: LOKI_USERNAME
+        sync: false
+      - key: LOKI_PASSWORD
+        sync: false
       - key: OTEL_ENDPOINT
         sync: false
       - key: OTEL_HEADERS

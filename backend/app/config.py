@@ -48,9 +48,14 @@ class Settings(BaseSettings):
     github_id: str = ""
     github_secret: str = ""
 
-    # Observability — Grafana Cloud OTLP
+    # Observability — Grafana Cloud OTLP (traces → Tempo)
     otel_endpoint: str = ""   # e.g. https://otlp-gateway-prod-us-east-0.grafana.net/otlp
     otel_headers: str = ""    # e.g. Authorization=Basic <base64token>
+
+    # Observability — Grafana Cloud Loki (direct log push)
+    loki_url: str = ""        # https://logs-prod-006.grafana.net/loki/api/v1/push
+    loki_username: str = ""   # Loki instance ID (numeric, e.g. 631886)
+    loki_password: str = ""   # Grafana Cloud API token with logs:write scope
 
     # Scheduler
     daily_generation_limit: int = 5
