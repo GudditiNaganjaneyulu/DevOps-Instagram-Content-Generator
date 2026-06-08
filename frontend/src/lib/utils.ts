@@ -34,6 +34,8 @@ export const CATEGORY_LABELS: Record<string, string> = {
   platform: "Platform Eng",
   sre: "SRE",
   ai_engineering: "AI Engineering",
+  feelings: "Feelings",
+  general: "General",
 };
 
 export const CATEGORY_EMOJIS: Record<string, string> = {
@@ -50,4 +52,22 @@ export const CATEGORY_EMOJIS: Record<string, string> = {
   platform: "🚀",
   sre: "🛡️",
   ai_engineering: "🤖",
+  feelings: "💙",
+  general: "😄",
+};
+
+export const CONTENT_TYPE_LABELS: Record<string, string> = {
+  meme: "Meme",
+  comic: "Comic",
+  incident: "Incident",
+  trend: "Trend",
+  dialogue: "Dialogue",
+};
+
+export const CONTENT_TYPE_EMOJIS: Record<string, string> = {
+  meme: "🎭",
+  comic: "🖼️",
+  incident: "🚨",
+  trend: "📈",
+  dialogue: "💬",
 };

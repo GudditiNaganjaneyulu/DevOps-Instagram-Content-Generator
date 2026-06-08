@@ -6,7 +6,9 @@ from app.services.ai.providers.openrouter_provider import OpenRouterProvider
 from app.services.ai.prompts.devops_prompts import (
     SYSTEM_PROMPT,
     SYSTEM_PROMPT_FEELINGS,
+    SYSTEM_PROMPT_DIALOGUE,
     build_meme_prompt,
+    build_dialogue_prompt,
     build_incident_prompt,
     build_trend_meme_prompt,
 )
@@ -39,7 +41,11 @@ class TextGenerationEngine:
         category: str,
         tone: str,
         context: str | None = None,
+        content_type: str = "meme",
     ) -> tuple[dict, str]:
+        if content_type == "dialogue":
+            user_prompt = build_dialogue_prompt(category, tone, context)
+            return await self._try_providers(SYSTEM_PROMPT_DIALOGUE, user_prompt)
         user_prompt = build_meme_prompt(category, tone, context)
         system = SYSTEM_PROMPT_FEELINGS if category == "feelings" else SYSTEM_PROMPT
         return await self._try_providers(system, user_prompt)

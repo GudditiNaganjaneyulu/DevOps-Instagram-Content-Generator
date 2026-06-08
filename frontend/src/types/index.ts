@@ -1,9 +1,10 @@
 export type ContentCategory =
   | "kubernetes" | "docker" | "terraform" | "aws" | "azure" | "gcp"
-  | "cicd" | "incident" | "observability" | "security" | "platform" | "sre" | "ai_engineering";
+  | "cicd" | "incident" | "observability" | "security" | "platform" | "sre"
+  | "ai_engineering" | "feelings" | "general";
 
 export type ContentTone = "sarcastic" | "empathetic" | "dark_humor" | "motivational" | "educational";
-export type ContentType = "meme" | "comic" | "incident" | "trend";
+export type ContentType = "meme" | "comic" | "incident" | "trend" | "dialogue";
 export type GenerationStatus = "pending" | "processing" | "completed" | "failed";
 
 export interface Generation {

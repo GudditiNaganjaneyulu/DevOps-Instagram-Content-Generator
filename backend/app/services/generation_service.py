@@ -63,6 +63,7 @@ async def run_generation(
             category=request.category,
             tone=request.tone,
             context=request.context,
+            content_type=request.content_type,
         )
 
         updates: dict = {

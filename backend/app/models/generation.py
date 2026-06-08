@@ -16,6 +16,7 @@ class ContentType(str, Enum):
     comic = "comic"
     incident = "incident"
     trend = "trend"
+    dialogue = "dialogue"
 
 
 class ContentCategory(str, Enum):
@@ -32,6 +33,8 @@ class ContentCategory(str, Enum):
     platform = "platform"
     sre = "sre"
     ai_engineering = "ai_engineering"
+    feelings = "feelings"
+    general = "general"
 
 
 class ContentTone(str, Enum):

@@ -8,12 +8,12 @@ import Image from "next/image";
 import { Download, RefreshCw, Wand2, Copy, Check, AlertCircle, Loader2 } from "lucide-react";
 import { downloadImage } from "@/lib/api";
 import { ShareButtons } from "@/components/ShareButtons";
-import { CATEGORY_LABELS, CATEGORY_EMOJIS } from "@/lib/utils";
+import { CATEGORY_LABELS, CATEGORY_EMOJIS, CONTENT_TYPE_LABELS, CONTENT_TYPE_EMOJIS } from "@/lib/utils";
 import type { ContentCategory, ContentTone, ContentType } from "@/types";
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as ContentCategory[];
 const TONES: ContentTone[] = ["sarcastic", "empathetic", "dark_humor", "motivational", "educational"];
-const TYPES: ContentType[] = ["meme", "comic", "incident", "trend"];
+const TYPES: ContentType[] = ["meme", "comic", "dialogue", "incident", "trend"];
 
 export default function GeneratePage() {
   const { result, isGenerating, error, request, updateRequest } = useGenerationStore();
@@ -74,6 +74,28 @@ export default function GeneratePage() {
                 >
                   <span>{CATEGORY_EMOJIS[cat]}</span>
                   <span>{CATEGORY_LABELS[cat]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+              Format
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {TYPES.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => updateRequest({ content_type: t })}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                    request.content_type === t
+                      ? "bg-purple-600 text-white"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  <span>{CONTENT_TYPE_EMOJIS[t]}</span>
+                  <span>{CONTENT_TYPE_LABELS[t]}</span>
                 </button>
               ))}
             </div>
