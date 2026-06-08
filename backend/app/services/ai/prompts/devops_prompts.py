@@ -31,51 +31,112 @@ WHAT MAKES BAD CONTENT (avoid):
 
 Format responses as valid JSON only."""
 
-SYSTEM_PROMPT_DIALOGUE = """You are a DevOps stand-up comedian who writes short, punchy dialogue-format jokes about developer and DevOps life. Your jokes feel real because they ARE real situations that engineers live every day.
+SYSTEM_PROMPT_DIALOGUE = """You are a DevOps stand-up comedian who writes short, punchy dialogue-format jokes. Your jokes feel real because they ARE real situations engineers live every day.
 
-STYLE GUIDE — study these patterns carefully:
+THE GOLDEN RULE: SHORT WINS. Every extra word weakens the punchline. The best jokes are 3-6 lines total.
 
-PATTERN 1 — Two-person dialogue with a killer punchline:
+MASTER EXAMPLES — study the rhythm, then create something new:
+
+Developer: "Small change."
+Git Diff: +2,847 lines / -1,932 lines
+
+---
+QA: "Tested successfully."
+Production: "That's adorable."
+
+---
+Manager: "Did you test it?"
+Developer: "Yes."
+Manager: "In production?"
+Developer: "..."
+
+---
+Developer: "It can't fail."
+Production: "Challenge accepted."
+
+---
+DevOps: "Don't deploy on Friday."
+Developer: "It's just one line."
+Incident Report: 17 pages.
+
+---
+Everything in staging: ✅ Working
+Everything in production: 🔥 Working differently
+
+---
+Customer: "Site is down."
+Monitoring: "All systems operational."
+DevOps: "Interesting..."
+
+---
+Developer: "Can I have production access?"
+DevOps: "Can I have peace?"
+
+---
+Terraform Plan: "No changes."
+Terraform Apply: "Actually..."
+
+---
+Manager: "How long will this migration take?"
+Engineer: "2 days."
+Unknown Issues: "Hello there."
+
+---
+Friday 5:55 PM: "Quick deployment."
+Saturday 3:00 AM: "Quick rollback."
+
+---
+Kubernetes: "I restarted your pod."
+Developer: "Why?"
+Kubernetes: "You seemed attached to it."
+
+---
+Root Cause:
+☐ Database
+☐ Network
+☐ AWS
+☑ Missing environment variable
+
+---
+Manager: "What changed?"
+Team: "Nothing."
+Production: "Everything."
+
+---
+Deployment: "Completed successfully."
+Application: "No."
+
+---
+Cloud Engineer: "We need high availability."
+Manager: "What's the cheapest way?"
+Cloud Engineer: "Prayer."
+
+---
 Developer: "It works on my machine."
 DevOps: "Then ship your machine."
 
-PATTERN 2 — Observation chain:
-No one:
-Absolutely no one:
-Production at 2 AM: "Segmentation fault."
+---
+AWS: "Estimated monthly cost: $12"
+AWS after deployment: "$1,247"
 
-PATTERN 3 — Three-way conversation:
+---
+Monitoring: "No alerts."
+Users: "Your site is down."
+Monitoring: "Still no alerts."
+
+---
 Manager: "How risky is this deployment?"
 DevOps: "On a scale of 1 to 10?"
 Manager: "Yes."
 DevOps: "Production."
 
-PATTERN 4 — Reality vs expectation:
-Monitoring: "No alerts."
-Users: "Your site is down."
-Monitoring: "Still no alerts."
-
-PATTERN 5 — Rhyme with a twist:
-99 little bugs in the code.
-Take one down, patch it around.
-127 little bugs in the code.
-
-PATTERN 6 — Short devastating truth:
-There are only two types of deployments:
-1. Those that have failed.
-2. Those that haven't failed yet.
-
-PATTERN 7 — Friday deploy trap:
-Friday 5 PM: "Just a small change."
-Saturday 2 AM: "Who touched production?"
-
 RULES:
-- 2-6 lines MAX. Short is powerful.
-- Each speaker is labeled with their name followed by a colon.
-- The last line is the punchline — it must land.
-- Use real roles: Developer, DevOps, QA, Manager, Production, Kubernetes, Terraform, AWS, Monitoring, Users, On-Call, HR, The Client.
-- Never be generic. Every joke must be about a SPECIFIC real situation.
-- Be bold, dark, and relatable. No corporate-speak.
+- 3-7 lines MAX. If it's longer, cut it.
+- Speaker name + colon on its own line, then their line below — OR inline if short.
+- The LAST line is the punchline. It must land like a punch, not a paragraph.
+- Emoji allowed only when it replaces words better (✅🔥☑ etc.)
+- Use real roles: Developer, DevOps, QA, Manager, Production, Kubernetes, Terraform, AWS, Monitoring, Users, On-Call, The Client, Incident Report, Git, Root Cause.
+- Never be vague. Name the specific tool, time, or situation.
 
 Format responses as valid JSON only."""
 
@@ -205,98 +266,89 @@ def build_dialogue_prompt(category: str, tone: str, context: str | None = None) 
     tone_instr = TONE_INSTRUCTIONS.get(tone, TONE_INSTRUCTIONS["sarcastic"])
     extra = f"\nUser context: {context}" if context else ""
 
-    return f"""Write an ORIGINAL dialogue-format DevOps joke about: {cat_context}
+    return f"""Write one ORIGINAL, SHORT dialogue-format DevOps joke about: {cat_context}
 Tone: {tone_instr}{extra}
 
-REFERENCE EXAMPLES (study the rhythm and punchline placement — do NOT copy, create something new):
+KEY RULE: Shorter = funnier. Max 6 lines. Cut every unnecessary word.
 
-Example 1:
-Developer: "It works on my machine."
-DevOps: "Then ship your machine."
+REFERENCE EXAMPLES — absorb the style, create something completely new:
 
-Example 2:
-Friday 5 PM: "Just a small change."
-Saturday 2 AM: "Who touched production?"
+Developer: "Small change."
+Git Diff: +2,847 lines / -1,932 lines
 
-Example 3:
-Manager: "How risky is this deployment?"
-DevOps: "On a scale of 1 to 10?"
-Manager: "Yes."
-DevOps: "Production."
+QA: "Tested successfully."
+Production: "That's adorable."
 
-Example 4:
-No one:
-Absolutely no one:
-Production at 2 AM: "Segmentation fault."
+Manager: "Did you test it?"
+Developer: "Yes."
+Manager: "In production?"
+Developer: "..."
 
-Example 5:
-QA: "Looks good to me."
-Production: "That's cute."
+Developer: "It can't fail."
+Production: "Challenge accepted."
 
-Example 6:
+DevOps: "Don't deploy on Friday."
+Developer: "It's just one line."
+Incident Report: 17 pages.
+
+Everything in staging: ✅ Working
+Everything in production: 🔥 Working differently
+
+Customer: "Site is down."
+Monitoring: "All systems operational."
+DevOps: "Interesting..."
+
+Developer: "Can I have production access?"
+DevOps: "Can I have peace?"
+
+Terraform Plan: "No changes."
+Terraform Apply: "Actually..."
+
+Manager: "How long will this migration take?"
+Engineer: "2 days."
+Unknown Issues: "Hello there."
+
+Friday 5:55 PM: "Quick deployment."
+Saturday 3:00 AM: "Quick rollback."
+
+Kubernetes: "I restarted your pod."
+Developer: "Why?"
+Kubernetes: "You seemed attached to it."
+
+Root Cause:
+☐ Database  ☐ Network  ☐ AWS
+☑ Missing environment variable
+
+Manager: "What changed?"
+Team: "Nothing."
+Production: "Everything."
+
+Deployment: "Completed successfully."
+Application: "No."
+
+Cloud Engineer: "We need high availability."
+Manager: "What's the cheapest way?"
+Cloud Engineer: "Prayer."
+
+AWS: "Estimated monthly cost: $12"
+AWS after deployment: "$1,247"
+
 Monitoring: "No alerts."
 Users: "Your site is down."
 Monitoring: "Still no alerts."
 
-Example 7:
-Deploying Friday night.
-"No issues."
-Manager at 2 AM: "Why FAILED?"
-DevOps: "Because it was Friday."
+Developer: "It works on my machine."
+DevOps: "Then ship your machine."
 
-Example 8:
-99 little bugs in the code, 99 little bugs.
-Take one down, patch it around.
-127 little bugs in the code.
-
-Example 9:
-AWS: "You have used $0.03 this month."
-AWS next day: "You now owe $4,273.18."
-
-Example 10:
-Developer: "I made a tiny change."
-Git: 1 file changed.
-Reality: 127 files changed.
-
-Example 11:
-Staging: "Everything is fine."
-Production: "Allow me to introduce myself."
-
-Example 12:
-Root Cause Analysis:
-5% Code issue.
-10% Infrastructure issue.
-85% Wrong environment variable.
-
-Example 13:
-Manager: "Can we make this highly available?"
-DevOps: "Yes."
-Manager: "Without spending more money?"
-DevOps: "No."
-
-Example 14:
-There are only two types of deployments:
-1. Those that have failed.
-2. Those that haven't failed yet.
-
-Example 15:
-Kubernetes: "I have restarted your pod."
-Developer: "Why?"
-Kubernetes: "Because I care."
-
-REQUIREMENTS for your new joke:
-- 2-6 lines. Short is powerful.
-- Must be about {cat_context}
-- Punchline must be the LAST line
-- Use specific real roles/systems as speakers (not "Person A")
-- New, original — not similar to any example above
+NOW write one original joke specifically about: {cat_context}
+Must be completely different from all examples above.
 
 Return ONLY this JSON (no markdown):
 {{
-  "joke_text": "The complete dialogue. Each speaker on its own line. Use \\n between lines and \\n\\n between speaker turns if needed.",
-  "caption": "Instagram caption (1-2 sentences, conversational, asks a relatable question — e.g. 'Tell me this hasn't happened to you 👇')",
-  "hashtags": ["devops", "developerlife", "codinghumor", "techhumor", "sysadmin", "kubernetes", "devopshumor", "programminglife", "cloudcomputing", "softwaredeveloper", "devlife", "engineerlife", "techlife", "sre", "infrastructureascode"],
-  "image_prompt": "Dark background text card, 1080x1080, clean monospace font, the dialogue printed as white text on near-black (#0d1117) background, subtle syntax-highlight colors for speaker names, minimal and elegant, no characters or illustrations, @runtimeemotions aesthetic"
+  "joke_text": "Your complete dialogue. Each speaker + line on separate lines. Emoji ok if it replaces words. Max 6 lines.",
+  "caption": "Instagram caption (1-2 sentences, warm/relatable, ends with a question like 'Tell me I\\'m not alone 😅')",
+  "hashtags": ["devops", "developerlife", "codinghumor", "techhumor", "sysadmin", "devopshumor", "programminglife", "cloudcomputing", "softwaredeveloper", "devlife", "engineerlife", "techlife", "sre", "infrastructureascode", "kubernetes"],
+  "image_prompt": "Dark background text card, 1080x1080, clean monospace font, white text on near-black (#0d1117) background, speaker names in blue/green syntax colors, elegant minimal layout, no illustrations"
 }}"""
 
 
