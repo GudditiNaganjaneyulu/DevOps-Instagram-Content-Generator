@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from bson import ObjectId
 from app.services.ai.text_engine import TextGenerationEngine
 from app.services.ai.image_engine import ImageGenerationEngine
@@ -7,6 +7,7 @@ from app.repositories.generation_repo import GenerationRepository
 from app.repositories.user_repo import UserRepository
 from app.models.generation import GenerationStatus, GenerateRequest, GenerationRead, generation_from_doc
 from app.core.exceptions import DailyLimitExceededError, GenerationFailedError
+from app.core.redis_client import cache_get, increment_counter
 from app.core.logging import get_logger
 from app.config import get_settings
 
@@ -14,6 +15,20 @@ logger = get_logger(__name__)
 
 text_engine = TextGenerationEngine()
 image_engine = ImageGenerationEngine()
+
+
+def _daily_key(user_id: str) -> str:
+    return f"gen_count:{user_id}:{date.today().isoformat()}"
+
+
+async def _get_today_count(user_id: str) -> int:
+    val = await cache_get(_daily_key(user_id))
+    return int(val) if val else 0
+
+
+async def _increment_today_count(user_id: str) -> int:
+    # TTL = 25h so keys auto-expire even if Redis clock drifts slightly
+    return await increment_counter(_daily_key(user_id), ttl=90000)
 
 
 async def run_generation(
@@ -24,7 +39,7 @@ async def run_generation(
 ) -> GenerationRead:
     settings = get_settings()
 
-    today_count = await gen_repo.count_today_by_user(user_id)
+    today_count = await _get_today_count(user_id)
     user_doc = await user_repo.find_by_id(user_id)
     daily_limit = user_doc.get("settings", {}).get("daily_limit", settings.daily_generation_limit)
     if today_count >= daily_limit:
@@ -75,7 +90,8 @@ async def run_generation(
 
         final = await gen_repo.update(gen_id, updates)
         await user_repo.increment_generation_count(user_id)
-        logger.info("Generation completed", gen_id=gen_id, ms=updates["generation_time_ms"])
+        new_count = await _increment_today_count(user_id)
+        logger.info("Generation completed", gen_id=gen_id, ms=updates["generation_time_ms"], daily_count=new_count)
         return generation_from_doc(final)
 
     except Exception as e:

@@ -3,6 +3,7 @@ from app.core.database import get_db
 from app.dependencies import get_current_user
 from app.repositories.generation_repo import GenerationRepository
 from app.models.user import UserRead
+from app.services.generation_service import _get_today_count
 
 router = APIRouter()
 
@@ -14,7 +15,7 @@ async def get_summary(
 ):
     repo = GenerationRepository(db)
     stats = await repo.get_stats()
-    today_count = await repo.count_today_by_user(current_user.id)
+    today_count = await _get_today_count(current_user.id)  # Redis-backed, fast
     user_total = await repo.count_by_user(current_user.id)
 
     # Provider health check via last 10 generations
