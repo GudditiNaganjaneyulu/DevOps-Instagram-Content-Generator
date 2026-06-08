@@ -30,6 +30,15 @@ export const authGitHub = (access_token: string) =>
 export const generateContent = (req: GenerateRequest) =>
   api.post<Generation>("/api/v1/generate/", req).then((r) => r.data);
 
+export const queueGeneration = (req: GenerateRequest) =>
+  api.post<{ job_id: string; status: string }>("/api/v1/generate/queue", req).then((r) => r.data);
+
+export const getJobStatus = (jobId: string) =>
+  api.get(`/api/v1/generate/job/${jobId}`).then((r) => r.data);
+
+export const getQueueStats = () =>
+  api.get("/api/v1/generate/queue/stats").then((r) => r.data);
+
 export const getGenerationStatus = (id: string) =>
   api.get<Generation>(`/api/v1/generate/status/${id}`).then((r) => r.data);
 

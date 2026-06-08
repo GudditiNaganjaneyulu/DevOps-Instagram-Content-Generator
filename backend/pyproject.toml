@@ -19,6 +19,7 @@ pymongo = "^4.10.0"
 
 # Cache / Queue
 redis = {extras = ["hiredis"], version = "^5.2.0"}
+upstash-qstash = "^3.0.0"
 
 # Auth / Security
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}

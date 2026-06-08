@@ -38,8 +38,11 @@ class GroqProvider:
                 max_tokens=1024,
             )
             raw = response.choices[0].message.content or ""
-            # Strip markdown code fences if present
             raw = raw.strip()
+            # Strip <think>...</think> blocks from reasoning models (deepseek-r1, qwen)
+            if "<think>" in raw:
+                raw = raw.split("</think>", 1)[-1].strip()
+            # Strip markdown code fences
             if raw.startswith("```"):
                 raw = raw.split("```")[1]
                 if raw.startswith("json"):

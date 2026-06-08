@@ -57,6 +57,12 @@ class Settings(BaseSettings):
     loki_username: str = ""   # Loki instance ID (numeric, e.g. 631886)
     loki_password: str = ""   # Grafana Cloud API token with logs:write scope
 
+    # QStash (Upstash) — optional, falls back to asyncio.Queue when not set
+    qstash_token: str = ""
+    qstash_current_signing_key: str = ""
+    qstash_next_signing_key: str = ""
+    api_base_url: str = "http://localhost:8000"  # set to https://api.gudditinaganjaneyulu.qzz.io in prod
+
     # Scheduler
     daily_generation_limit: int = 5
     scheduler_hour: int = 9

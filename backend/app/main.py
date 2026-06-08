@@ -28,6 +28,10 @@ async def lifespan(app: FastAPI):
     await connect_redis()
     configure_cloudinary()
 
+    # Start generation job queue worker
+    from app.core.job_queue import start_worker, stop_worker
+    start_worker()
+
     # Start scheduler
     if settings.app_env == "production" or settings.app_debug:
         try:
@@ -39,6 +43,7 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("Shutting down...")
+    stop_worker()
     await disconnect_db()
     await disconnect_redis()
 

@@ -53,6 +53,14 @@ services:
         sync: false
       - key: OTEL_HEADERS
         sync: false
+      - key: QSTASH_TOKEN
+        sync: false
+      - key: QSTASH_CURRENT_SIGNING_KEY
+        sync: false
+      - key: QSTASH_NEXT_SIGNING_KEY
+        sync: false
+      - key: API_BASE_URL
+        value: https://api.gudditinaganjaneyulu.qzz.io
       - key: APP_ENV
         value: production
       - key: APP_DEBUG

@@ -1,3 +1,4 @@
+import asyncio
 import json
 from google import genai
 from google.genai import types
@@ -6,6 +7,15 @@ from app.core.exceptions import ProviderRateLimitError, ProviderError
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+def _strip_fences(raw: str) -> str:
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    return raw.strip()
 
 
 class GeminiProvider:
@@ -22,25 +32,27 @@ class GeminiProvider:
             self._client = genai.Client(api_key=settings.google_ai_api_key)
         return self._client
 
-    async def complete(self, system: str, user: str, **kwargs) -> dict:
+    def _call_sync(self, system: str, user: str) -> str:
         client = self._get_client()
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=user,
+            config=types.GenerateContentConfig(
+                system_instruction=system,
+                temperature=0.85,
+                max_output_tokens=1024,
+                response_mime_type="application/json",
+            ),
+        )
+        return response.text or ""
+
+    async def complete(self, system: str, user: str, **kwargs) -> dict:
         try:
-            response = client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=user,
-                config=types.GenerateContentConfig(
-                    system_instruction=system,
-                    temperature=0.85,
-                    max_output_tokens=1024,
-                    response_mime_type="application/json",
-                ),
-            )
-            raw = (response.text or "").strip()
-            if raw.startswith("```"):
-                raw = raw.split("```")[1]
-                if raw.startswith("json"):
-                    raw = raw[4:]
-            return json.loads(raw.strip())
+            # Run sync SDK in threadpool — avoids blocking the event loop
+            raw = await asyncio.to_thread(self._call_sync, system, user)
+            return json.loads(_strip_fences(raw))
+        except json.JSONDecodeError as e:
+            raise ProviderError(self.name, f"JSON parse error: {e}")
         except Exception as e:
             err = str(e)
             if "quota" in err.lower() or "429" in err or "rate" in err.lower():

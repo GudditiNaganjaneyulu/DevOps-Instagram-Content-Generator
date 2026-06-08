@@ -3,8 +3,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGenerate } from "@/hooks/useGenerate";
 import { useGenerationStore } from "@/stores/generation";
+import { useBackendWakeup } from "@/hooks/useBackendWakeup";
 import Image from "next/image";
-import { Download, RefreshCw, Wand2, Copy, Check } from "lucide-react";
+import { Download, RefreshCw, Wand2, Copy, Check, AlertCircle, Loader2 } from "lucide-react";
 import { downloadImage } from "@/lib/api";
 import { ShareButtons } from "@/components/ShareButtons";
 import { CATEGORY_LABELS, CATEGORY_EMOJIS } from "@/lib/utils";
@@ -15,12 +16,18 @@ const TONES: ContentTone[] = ["sarcastic", "empathetic", "dark_humor", "motivati
 const TYPES: ContentType[] = ["meme", "comic", "incident", "trend"];
 
 export default function GeneratePage() {
-  const { result, isGenerating, request, updateRequest } = useGenerationStore();
+  const { result, isGenerating, error, request, updateRequest } = useGenerationStore();
   const generate = useGenerate();
+  const { status: wakeStatus, elapsed, ensureAwake } = useBackendWakeup();
   const [copied, setCopied] = useState(false);
   const [context, setContext] = useState("");
 
-  const handleGenerate = () => {
+  const isWaking = wakeStatus === "checking" || wakeStatus === "warming";
+  const isBusy = isGenerating || isWaking;
+
+  const handleGenerate = async () => {
+    const ready = await ensureAwake();
+    if (!ready) return; // timed out — error shown via wakeStatus
     generate.mutate({
       category: request.category ?? "kubernetes",
       tone: request.tone ?? "sarcastic",
@@ -102,13 +109,54 @@ export default function GeneratePage() {
             />
           </div>
 
+          {/* Wake-up status banner */}
+          <AnimatePresence>
+            {isWaking && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs"
+              >
+                <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                {wakeStatus === "checking"
+                  ? "Checking backend…"
+                  : `Backend is warming up after cold start… ${elapsed}s`}
+              </motion.div>
+            )}
+            {wakeStatus === "timeout" && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs"
+              >
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                Backend not responding. Try again in a minute.
+              </motion.div>
+            )}
+            {error && !isWaking && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs"
+              >
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <button
             onClick={handleGenerate}
-            disabled={isGenerating}
+            disabled={isBusy}
             className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold flex items-center justify-center gap-2 transition-colors"
           >
-            {isGenerating ? (
-              <><RefreshCw className="w-4 h-4 animate-spin" /> Generating...</>
+            {isWaking ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Waking up backend…</>
+            ) : isGenerating ? (
+              <><RefreshCw className="w-4 h-4 animate-spin" /> Generating…</>
             ) : (
               <><Wand2 className="w-4 h-4" /> Generate</>
             )}
